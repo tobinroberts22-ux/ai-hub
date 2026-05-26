@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Check, Zap, MessageSquare, Calendar, Star, Phone, Clock } from 'lucide-react'
+import { Check, Zap, MessageSquare, Calendar, Star, Phone, Clock, Globe } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -137,6 +137,11 @@ export default function HomePage() {
                 title: 'Simple Dashboard',
                 desc: 'See every conversation, all your leads, and your bookings in one clean screen. No tech knowledge required.',
               },
+              {
+                icon: <Globe className="w-6 h-6 text-blue-600" />,
+                title: 'Professional Website Included',
+                desc: "On the Pro plan, we build you a professional website for your business — fully set up, mobile-friendly, and ready to go. No extra charge.",
+              },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="bg-white rounded-2xl p-5 border border-gray-200">
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">{icon}</div>
@@ -183,7 +188,7 @@ export default function HomePage() {
             {[
               { name: 'Starter', price: '$97', desc: 'Chat widget + lead capture + booking requests', tag: '' },
               { name: 'Growth', price: '$197', desc: 'Real calendar booking + Calendly integration + review drafts', tag: 'Most Popular' },
-              { name: 'Pro', price: '$397', desc: 'Full scheduling suite + content generation + priority support', tag: '' },
+              { name: 'Pro', price: '$397', desc: 'Full scheduling suite + professional website built for you + priority support', tag: '' },
             ].map(({ name, price, desc, tag }) => (
               <div
                 key={name}
@@ -226,6 +231,10 @@ export default function HomePage() {
             {
               q: "What if I don't have a website?",
               a: "You still get a direct chat link you can share on Facebook, in text messages, or in your Google Business profile."
+            },
+            {
+              q: 'Can you build my website too?',
+              a: "Yes — the Pro plan includes a professional website built specifically for your business. Mobile-friendly, SEO-ready, and connected to your AI chat widget out of the box."
             },
             {
               q: 'Is there a contract?',
