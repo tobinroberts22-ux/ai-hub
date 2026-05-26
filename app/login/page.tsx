@@ -65,7 +65,17 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+                <p className="text-red-600 text-sm">{error}</p>
+                {error.toLowerCase().includes('confirm') && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Try signing up again with the same email —{' '}
+                    <Link href="/signup" className="text-blue-600 underline">create account →</Link>
+                  </p>
+                )}
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}

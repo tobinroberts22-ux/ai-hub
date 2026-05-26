@@ -18,13 +18,41 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) {
-      setError(error.message)
+    // Step 1: Create the user server-side with email already confirmed
+    const res = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      if (data.error === 'already_exists') {
+        // Account exists — try signing in (covers case where they already signed up)
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInErr) {
+          setError('An account with this email already exists. Try signing in instead.')
+          setLoading(false)
+          return
+        }
+        router.push('/dashboard')
+        return
+      }
+      setError(data.error || 'Something went wrong. Please try again.')
       setLoading(false)
-    } else {
-      router.push('/onboarding')
+      return
     }
+
+    // Step 2: Sign in to get a session
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError) {
+      setError(signInError.message)
+      setLoading(false)
+      return
+    }
+
+    // Step 3: Go to onboarding
+    router.push('/onboarding')
   }
 
   return (
@@ -66,7 +94,16 @@ export default function SignupPage() {
                 placeholder="Min. 6 characters"
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+                <p className="text-red-600 text-sm">{error}</p>
+                {error.includes('already exists') && (
+                  <Link href="/login" className="text-sm text-blue-600 underline mt-1 inline-block">
+                    Go to sign in →
+                  </Link>
+                )}
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}
