@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Settings, Code, CalendarCheck, LogOut, Zap } from 'lucide-react'
+import { LayoutDashboard, Settings, Code, CalendarCheck, LogOut, Zap, TrendingUp } from 'lucide-react'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -53,7 +53,14 @@ export default function DashboardNav() {
         })}
       </nav>
 
-      <div className="p-3 border-t border-gray-800">
+      <div className="p-3 border-t border-gray-800 space-y-1">
+        <Link
+          href="/pricing"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-amber-400 hover:text-amber-300 hover:bg-gray-800 transition-colors w-full"
+        >
+          <TrendingUp className="w-4 h-4" />
+          Upgrade Plan
+        </Link>
         <button
           onClick={signOut}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors w-full"

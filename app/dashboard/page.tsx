@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import DashboardNav from '@/components/DashboardNav'
 import { useRouter } from 'next/navigation'
-import { MessageSquare, Users, TrendingUp, Calendar } from 'lucide-react'
+import Link from 'next/link'
+import { MessageSquare, Users, TrendingUp, Calendar, Zap, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -99,6 +100,38 @@ export default function DashboardPage() {
   const limit = PLAN_LIMITS[business.plan] ?? 20
   const used = usage?.conversation_count ?? 0
   const leads = conversations.filter((c) => c.lead_captured).length
+  const isTrialing = business.subscription_status === 'trialing'
+  const trialExpired = isTrialing && used >= limit
+
+  // Hard paywall — trial used up and no active subscription
+  if (trialExpired) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <DashboardNav />
+        <main className="flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md text-center">
+            <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <Zap className="w-8 h-8 text-amber-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your free trial has ended</h2>
+            <p className="text-gray-500 mb-2">
+              You&apos;ve used all {limit} free conversations.
+            </p>
+            <p className="text-gray-500 mb-8">
+              Pick a plan to keep your AI assistant running 24/7 and never miss another lead.
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-block bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-lg hover:bg-blue-700 transition-colors"
+            >
+              Choose a Plan →
+            </Link>
+            <p className="text-sm text-gray-400 mt-4">Starting at $97/month · No contracts · Cancel anytime</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -106,10 +139,10 @@ export default function DashboardPage() {
       <main className="flex-1 overflow-auto">
         <div className="p-8 max-w-5xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{business.name}</h1>
-              <p className="text-gray-500 text-sm mt-1">Here's what's happening with your AI assistant</p>
+              <p className="text-gray-500 text-sm mt-1">Here&apos;s what&apos;s happening with your AI assistant</p>
             </div>
             <Badge
               variant={business.subscription_status === 'active' ? 'default' : 'secondary'}
@@ -118,6 +151,29 @@ export default function DashboardPage() {
               {business.plan} plan
             </Badge>
           </div>
+
+          {/* Trial banner */}
+          {isTrialing && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-amber-900 text-sm">
+                    Free trial — {Math.max(0, limit - used)} of {limit} conversations remaining
+                  </p>
+                  <p className="text-amber-700 text-xs mt-0.5">
+                    Upgrade before you hit the limit so your AI keeps running without interruption.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/pricing"
+                className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
+              >
+                Upgrade Now
+              </Link>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
