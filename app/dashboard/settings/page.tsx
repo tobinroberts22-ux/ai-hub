@@ -7,7 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, Plus, Trash2 } from 'lucide-react'
+
+type Crew = { id: string; name: string; color: string }
+type JobType = { id: string; name: string; duration_minutes: number; buffer_minutes: number }
+
+const CREW_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
@@ -15,10 +20,24 @@ type FAQ = { q: string; a: string }
 
 export default function SettingsPage() {
   const [userId, setUserId] = useState('')
+  const [businessId, setBusinessId] = useState('')
   const [plan, setPlan] = useState('starter')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  // Crews state
+  const [crews, setCrews] = useState<Crew[]>([])
+  const [newCrewName, setNewCrewName] = useState('')
+  const [newCrewColor, setNewCrewColor] = useState(CREW_COLORS[0])
+  const [addingCrew, setAddingCrew] = useState(false)
+
+  // Job types state
+  const [jobTypes, setJobTypes] = useState<JobType[]>([])
+  const [newJtName, setNewJtName] = useState('')
+  const [newJtDuration, setNewJtDuration] = useState(60)
+  const [newJtBuffer, setNewJtBuffer] = useState(30)
+  const [addingJt, setAddingJt] = useState(false)
 
   const [name, setName] = useState('')
   const [industry, setIndustry] = useState('')
@@ -57,11 +76,51 @@ export default function SettingsPage() {
         setFaqs(data.faqs?.length ? data.faqs : [{ q: '', a: '' }])
         setCalendlyUrl(data.calendly_url ?? '')
         setPlan(data.plan ?? 'starter')
+        setBusinessId(data.id)
+
+        // Load crews and job types
+        const [{ data: crewData }, { data: jtData }] = await Promise.all([
+          supabase.from('crews').select('id,name,color').eq('business_id', data.id).eq('active', true).order('created_at'),
+          supabase.from('job_types').select('id,name,duration_minutes,buffer_minutes').eq('business_id', data.id).order('created_at'),
+        ])
+        setCrews(crewData ?? [])
+        setJobTypes(jtData ?? [])
       }
       setLoading(false)
     }
     load()
   }, [])
+
+  async function addCrew() {
+    if (!newCrewName.trim() || !businessId) return
+    setAddingCrew(true)
+    const { data } = await supabase.from('crews').insert({ business_id: businessId, name: newCrewName.trim(), color: newCrewColor }).select('id,name,color').single()
+    if (data) setCrews(c => [...c, data])
+    setNewCrewName('')
+    setNewCrewColor(CREW_COLORS[(crews.length + 1) % CREW_COLORS.length])
+    setAddingCrew(false)
+  }
+
+  async function deleteCrew(id: string) {
+    await supabase.from('crews').update({ active: false }).eq('id', id)
+    setCrews(c => c.filter(x => x.id !== id))
+  }
+
+  async function addJobType() {
+    if (!newJtName.trim() || !businessId) return
+    setAddingJt(true)
+    const { data } = await supabase.from('job_types').insert({ business_id: businessId, name: newJtName.trim(), duration_minutes: newJtDuration, buffer_minutes: newJtBuffer }).select('id,name,duration_minutes,buffer_minutes').single()
+    if (data) setJobTypes(j => [...j, data])
+    setNewJtName('')
+    setNewJtDuration(60)
+    setNewJtBuffer(30)
+    setAddingJt(false)
+  }
+
+  async function deleteJobType(id: string) {
+    await supabase.from('job_types').delete().eq('id', id)
+    setJobTypes(j => j.filter(x => x.id !== id))
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
@@ -213,6 +272,93 @@ export default function SettingsPage() {
                 >
                   + Add another FAQ
                 </button>
+              </CardContent>
+            </Card>
+
+            {/* Crews */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Crews / Teams</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-gray-400">Add each crew or team. They'll appear color-coded on your schedule calendar.</p>
+                {crews.map(crew => (
+                  <div key={crew.id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                    <div className="w-5 h-5 rounded-full flex-shrink-0" style={{ background: crew.color }} />
+                    <span className="text-sm font-medium text-gray-800 flex-1">{crew.name}</span>
+                    <button onClick={() => deleteCrew(crew.id)} className="text-gray-300 hover:text-red-400 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-2 pt-1">
+                  <input
+                    value={newCrewName}
+                    onChange={e => setNewCrewName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addCrew()}
+                    placeholder="Crew name (e.g. Crew A, Team Martinez)"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                  />
+                  <div className="flex gap-1">
+                    {CREW_COLORS.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setNewCrewColor(c)}
+                        className={`w-6 h-6 rounded-full transition-transform ${newCrewColor === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : ''}`}
+                        style={{ background: c }}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addCrew}
+                    disabled={addingCrew || !newCrewName.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white px-3 py-2 rounded-lg transition-colors"
+                  >
+                    {addingCrew ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Job Types */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Job Types</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-gray-400">Define your services with estimated durations. The AI will use this when scheduling jobs.</p>
+                {jobTypes.map(jt => (
+                  <div key={jt.id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                    <span className="text-sm font-medium text-gray-800 flex-1">{jt.name}</span>
+                    <span className="text-xs text-gray-400 flex-shrink-0">
+                      {jt.duration_minutes < 60 ? `${jt.duration_minutes}m` : `${jt.duration_minutes / 60}hr`}
+                      {jt.buffer_minutes > 0 ? ` + ${jt.buffer_minutes}m buffer` : ''}
+                    </span>
+                    <button onClick={() => deleteJobType(jt.id)} className="text-gray-300 hover:text-red-400 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-2 pt-1">
+                  <input
+                    value={newJtName}
+                    onChange={e => setNewJtName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addJobType()}
+                    placeholder="Service name (e.g. Lawn mowing)"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                  />
+                  <select value={newJtDuration} onChange={e => setNewJtDuration(Number(e.target.value))} className="border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-blue-400">
+                    {[30,45,60,90,120,150,180,240,300,480].map(m => (
+                      <option key={m} value={m}>{m < 60 ? `${m}m` : `${m/60}hr`}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={addJobType}
+                    disabled={addingJt || !newJtName.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white px-3 py-2 rounded-lg transition-colors"
+                  >
+                    {addingJt ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  </button>
+                </div>
               </CardContent>
             </Card>
 

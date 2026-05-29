@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Settings, Code, CalendarCheck, LogOut, Zap, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, Settings, Code, CalendarCheck, LogOut, Zap, TrendingUp, Calendar } from 'lucide-react'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/bookings', label: 'Bookings', icon: CalendarCheck },
+  { href: '/dashboard/schedule', label: 'Schedule', icon: Calendar },
+  { href: '/dashboard/bookings', label: 'Booking Requests', icon: CalendarCheck },
   { href: '/dashboard/embed', label: 'Get Widget Code', icon: Code },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
