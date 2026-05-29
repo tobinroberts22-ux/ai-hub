@@ -138,29 +138,74 @@ async function detectAndSaveLead(
   businessId: string,
   business: { plan: string; calendly_url: string | null }
 ) {
-  // Simple regex to detect phone numbers
+  // Detect phone number
   const phoneRegex = /(\+?1?\s?)?(\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4})/
   const phoneMatch = userMessage.match(phoneRegex)
 
-  if (phoneMatch) {
-    const phone = phoneMatch[0].trim()
+  // Detect name from common introductions
+  const nameMatch = userMessage.match(/(?:my name is|i'm|i am|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i)
+  const detectedName = nameMatch?.[1] ?? null
 
-    // Update conversation as lead captured
+  if (phoneMatch) {
+    const phone = phoneMatch[0].replace(/\s/g, '')
+
+    // Get current conversation data
+    const { data: conv } = await supabaseAdmin
+      .from('conversations')
+      .select('customer_name, customer_phone')
+      .eq('id', conversationId)
+      .single()
+
+    const customerName = detectedName || conv?.customer_name || null
+
+    // Update conversation
     await supabaseAdmin
       .from('conversations')
-      .update({ customer_phone: phone, lead_captured: true })
+      .update({
+        customer_phone: phone,
+        lead_captured: true,
+        ...(customerName ? { customer_name: customerName } : {}),
+      })
+      .eq('id', conversationId)
+
+    // Auto-create or update customer record
+    const { data: existing } = await supabaseAdmin
+      .from('customers')
+      .select('id, name')
+      .eq('business_id', businessId)
+      .eq('phone', phone)
+      .maybeSingle()
+
+    if (!existing) {
+      await supabaseAdmin.from('customers').insert({
+        business_id: businessId,
+        name: customerName ?? 'Unknown Customer',
+        phone,
+        source: 'chat',
+        tags: ['Lead'],
+        last_contact_at: new Date().toISOString(),
+      })
+    } else {
+      // Update last contact time, and name if we got a better one
+      await supabaseAdmin.from('customers').update({
+        last_contact_at: new Date().toISOString(),
+        ...(detectedName && existing.name === 'Unknown Customer' ? { name: detectedName } : {}),
+      }).eq('id', existing.id)
+    }
+  } else if (detectedName) {
+    // Name shared without phone — still update conversation
+    await supabaseAdmin
+      .from('conversations')
+      .update({ customer_name: detectedName })
       .eq('id', conversationId)
   }
 
   // Detect booking intent for Starter plan
   if (business.plan === 'starter') {
     const bookingKeywords = ['schedule', 'book', 'appointment', 'quote', 'estimate', 'available', 'come out', 'visit']
-    const hasBookingIntent = bookingKeywords.some((kw) =>
-      userMessage.toLowerCase().includes(kw)
-    )
+    const hasBookingIntent = bookingKeywords.some((kw) => userMessage.toLowerCase().includes(kw))
 
     if (hasBookingIntent && phoneMatch) {
-      // Save as a booking request
       const { data: conv } = await supabaseAdmin
         .from('conversations')
         .select('customer_name, customer_phone')
