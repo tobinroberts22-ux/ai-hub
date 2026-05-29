@@ -85,7 +85,7 @@ export default function OnboardingPage() {
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900">AI Hub Setup</span>
+          <span className="font-bold text-gray-900">Axon Setup</span>
         </div>
 
         {/* Progress */}

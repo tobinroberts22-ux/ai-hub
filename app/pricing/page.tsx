@@ -36,7 +36,7 @@ export default function PricingPage() {
           <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900">AI Hub</span>
+          <span className="font-bold text-gray-900">Axon</span>
         </Link>
         <div className="flex gap-3">
           <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2">Sign in</Link>
@@ -49,7 +49,7 @@ export default function PricingPage() {
       <div className="max-w-5xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Simple, honest pricing</h1>
-          <p className="text-gray-500 text-lg">One missed call costs more than a month of AI Hub. No contracts. Cancel anytime.</p>
+          <p className="text-gray-500 text-lg">One missed call costs more than a month of Axon. No contracts. Cancel anytime.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">

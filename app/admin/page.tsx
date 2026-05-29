@@ -71,7 +71,7 @@ export default function AdminPage() {
         <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
           <Zap className="w-4 h-4 text-white" />
         </div>
-        <span className="font-bold">AI Hub Admin</span>
+        <span className="font-bold">Axon Admin</span>
         <Link href="/dashboard" className="ml-auto text-sm text-gray-400 hover:text-white">
           ← Back to dashboard
         </Link>

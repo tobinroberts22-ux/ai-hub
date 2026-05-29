@@ -29,7 +29,7 @@ export default function DashboardNav() {
           <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-white text-sm">AI Hub</span>
+          <span className="font-bold text-white text-sm">Axon</span>
         </Link>
       </div>
 

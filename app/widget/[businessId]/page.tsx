@@ -188,7 +188,7 @@ export default function WidgetPage() {
             </svg>
           </button>
         </div>
-        <p className="text-center text-gray-300 text-[10px] mt-2">Powered by AI Hub</p>
+        <p className="text-center text-gray-300 text-[10px] mt-2">Powered by Axon</p>
       </div>
     </div>
   )
